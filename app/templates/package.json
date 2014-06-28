@@ -1,0 +1,11 @@
+{
+  "name": "<%= projectName %>",
+  "version": "<%= projectVersion %>",
+  "description": "<%= projectFamily %>",
+  "repository": {},
+  "author": "<%= projectAuthor %>",
+  "license": "MIT",
+  "devDependencies": {
+    "yargs": "~1.2.6"
+  }
+}
