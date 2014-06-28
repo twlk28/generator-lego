@@ -70,11 +70,11 @@ var LegoGenerator = yeoman.generators.Base.extend({
 
 	end: function(){
 		if(process.platform === "darwin"||"linux"){
-        	this.spawnCommand('ln', ['-s', path.join(__dirname, 'templates', 'node_modules'), 'node_modules'])
+        	this.spawnCommand('ln', ['-s', path.join(__dirname, 'templates', '_node_modules'), 'node_modules'])
         	this.spawnCommand('open', ['-a', this.gConfig['generator-lego']['open_app'], '.'])
 		}
 		if(process.platform === "win32"){
-			this.spawnCommand('mklink', ['/d', '.\\node_modules', path.join(__dirname, 'templates', 'node_modules')])
+			this.spawnCommand('mklink', ['/d', '.\\node_modules', path.join(__dirname, 'templates', '_node_modules')])
         	this.spawnCommand('start', ['', this.gConfig['generator-lego']['open_app'], '.'])			
 		}
         this.installDependencies()
