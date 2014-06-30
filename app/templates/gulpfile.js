@@ -10,34 +10,37 @@ var gulp = require('gulp'),
     imagemin = require('gulp-imagemin'),
     minifyCSS = require('gulp-minify-css'),
     clean = require('gulp-clean'),
+    autoprefix = require('gulp-autoprefixer'),
+    zip = require('gulp-zip'),
 	log = console.log;
 
-var paths = {
-	scripts: ['src/js/**/*.js'],
-	images: ['src/img/**', 'src/slice/**'],
-	css: ['src/css/*.css'],
-	html: ['src/*.html']
-},
-	p = +argv.p || 9000,
-    env = argv._[0]==='release'?'release':'dev';
+var port = +argv.p || 9000,
+    env = argv._[0] || 'dev';
 
-
-log('env: ', env);
 gulp.task('conn_src', function(){
 	connect.server({
 		root: 'src',
-		port: p,
+		port: port,
 		livereload: {
-			port: p+1
+			port: port+1
+		}
+	})
+})
+gulp.task('conn_dest', function(){
+	connect.server({
+		root: 'dest',
+		port: 9100,
+		livereload: {
+			port: 9101
 		}
 	})
 })
 
 // gulp.task('conn_src', connect.server({
 // 	root: ['src'],
-// 	port: p,
+// 	port: port,
 // 	livereload: {
-// 		port: p+1
+// 		port: port+1
 // 	},
 // 	open: {
 // 		browser: '/Applications/Google\ Chrome.app'
@@ -54,40 +57,48 @@ gulp.task('conn_src', function(){
 // }))
 
 gulp.task('html', function(){
-    gulp.src(['src/*.html'])
+    return gulp.src(['src/*.html'])
         .pipe( gulpif(env==='dev', watch()) )
         .pipe( gulpif(env==='dev', connect.reload()) )
         .pipe( gulpif(env==='release', gulp.dest('dest')) )
 })
-gulp.task('css', function(){
-    gulp.src('src/css/**')
+gulp.task('sass', function(){
+	var config = {sourceComments: 'map', sourceMap: 'sass', style: 'compact'}
+	if(env === 'dev'){
+		gulp.watch(['src/sass/**'], function(){
+			return gulp.src('src/sass/**')
+				.pipe(sass(config))
+				.pipe(autoprefix("last 1 version", "> 1%", "ie 8", "ie 7"))
+		        .pipe(gulp.dest('src/css'))
+		})
+	}
+	if(env === 'release'){
+		return gulp.src('src/sass/**')
+			.pipe(sass(config))
+			.pipe(autoprefix("last 1 version", "> 1%", "ie 8", "ie 7"))
+	        .pipe(gulp.dest('src/css'))
+	}
+})
+gulp.task('css', ['sass'], function(){
+    return gulp.src('src/css/**')
         .pipe( gulpif(env==='dev', watch()) )
         .pipe( gulpif(env==='dev', connect.reload()) )
         .pipe( gulpif(env==='release', minifyCSS()) )
         .pipe( gulpif(env==='release', gulp.dest('dest/css')) )
 })
 gulp.task('js', function(){
-    gulp.src('src/js/**')
+    return gulp.src('src/js/**')
         .pipe( gulpif(env==='dev', watch()) )
         .pipe( gulpif(env==='dev', connect.reload()) )
         .pipe( gulpif(env==='release', uglify()) )
         .pipe( gulpif(env==='release', gulp.dest('dest/js')) )
 })
 gulp.task('img', function(){
-    gulp.src('src/img/**')
+    return gulp.src('src/img/**')
         .pipe( gulpif(env==='dev', watch()) )
         .pipe( gulpif(env==='dev', connect.reload()) )
         .pipe( gulpif(env==='release', imagemin({ progressive: true })) )
         .pipe( gulpif(env==='release', gulp.dest('dest/img')) )
-})
-gulp.task('sass', function(){
-	var config = {
-		sourceComments : 'map',
-		outputStyle : 'compressed'
-	}
-	gulp.src('src/sass/global.scss')
-		.pipe(sass())
-		.pipe(gulp.dest('src/css'))
 })
 
 gulp.task('clean_dest', function(){
@@ -95,22 +106,21 @@ gulp.task('clean_dest', function(){
         .pipe( clean() )
 })
 
-gulp.task('watch_sass', function(){
-	gulp.src('src/sass/**')
-		.pipe(watch())
-		.pipe(sass())
-        .pipe(gulp.dest('src/css/'));
-});
+// TODO trans_html
+gulp.task('trans_html', function(){
+	log('replace url to asserts server url')
+})
 
-// state: using
 // usage1> gulp
 // usage2> gulp -p 1234
-gulp.task('default', ['conn_src', 'watch_sass', 'js', 'img', 'css', 'html'])
+gulp.task('default', ['conn_src', 'css', 'js', 'img', 'html'])
 
-// usage1> gulp release
-gulp.task('release', ['clean_dest', 'conn_dest', 'js', 'img', 'css', 'html'])
+//  usage> gulp release
+gulp.task('release', ['clean_dest', 'conn_dest', 'css', 'js', 'img', 'html'])
 
-// zip
-gulp.task('zip', function () {
-    log('uglify...');
-});
+//  usage> gulp zip
+gulp.task('zip',['trans_html'], function(){
+	gulp.src(['dest/**', '!dest/slice/**'])
+		.pipe(zip('dest.zip'))
+		.pipe(gulp.dest('./'))
+})
