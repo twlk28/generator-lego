@@ -62,6 +62,8 @@ gulp.task('html', function(){
         .pipe( gulpif(env==='dev', connect.reload()) )
         .pipe( gulpif(env==='release', gulp.dest('dest')) )
 })
+
+// win32 gulp-sass charset bug --> https://github.com/dlmanning/gulp-sass/issues/10
 gulp.task('sass', function(){
 	var config = {sourceComments: 'map', sourceMap: 'sass', style: 'compact'}
 	if(env === 'dev'){
