@@ -1,6 +1,6 @@
 {
-    "generator-lego": {
-        "open_app": "sublime text 2"
-    },
-    "projectAuthor": "adi"
+    "open_app": false,
+    "projectAuthor": "adi",
+    "svnUsr": "liujianxin",
+    "svnPwd": "g2551"
 }
